@@ -22,7 +22,6 @@ import matplotlib.pyplot as plt
 
 BASE_URL = "http://lyricstranslate.com/en/rammstein-lyrics.html#"
 
-song_album_tuple = ()
 songname_list = []
 album_list = []
 reqcount_list = []
@@ -32,10 +31,23 @@ def make_soup(url):
     html = urlopen(url).read()
     return BeautifulSoup(html, "lxml")
 
-def xstr(s):
+def simplify_album(s):
     if s is None:
         return 'Unclassified'
-    return str(s.string)
+    elif 'Mutter' in str(s.string):
+        return 'Mutter'
+    elif 'Liebe' in str(s.string):
+        return 'Liebe Ist Fur Alle Da'
+    elif 'Herzeleid' in str(s.string):
+        return 'Herzeleid'
+    elif 'Reise' in str(s.string):
+        return 'Reise Reise'
+    elif 'sucht' in str(s.string):
+        return 'Sehnsucht'
+    elif 'Rosenrot' in str(s.string):
+        return 'Roesenrot'
+    else:
+        return 'Singles'
 
 def get_language_requests(section_url):
     soup = make_soup(section_url)
@@ -48,21 +60,35 @@ def get_language_requests(section_url):
         song_name = songname.find("a")
         album = songname.find(class_="langalbum")
         song_title = link.findAll(class_ = "lang")
-        album_list.append(album)
+
+        album_list.append(simplify_album(album))
         songname_list.append(song_name.string)
         reqcount_list.append(len(song_title))
-        song_album_tuple = (song_name.string,) + (xstr(album),)
-        song_album_list.append(song_album_tuple)
 
-    print song_album_list
-    mydict = dict(zip(song_album_list, reqcount_list))
-    df = pd.DataFrame(mydict.values(), mydict.keys())
-    df = df.rename(columns={0:'count'})
-    print df.head()
 
-    df.plot(kind = 'bar')
-    plt.show()
+    mydict_count = dict(zip(songname_list, reqcount_list))
+    mydict_album = dict(zip(songname_list, album_list))
 
+    print mydict_album
+    print mydict_count
+
+    df_count = pd.DataFrame({'song':mydict_count.keys(), 'count':mydict_count.values()})
+    df_album = pd.DataFrame({'song':mydict_album.keys(), 'album':mydict_album.values()})
+
+    print df_count.head()
+    print df_album.head()
+
+    df_final = pd.merge(df_count, df_album, on='song', how='outer')
+    print df_final.head()
+
+    sorted_df = df_final[(df_final.album != 'Singles') & (df_final.album != 'Unclassified')].sort('album')
+    print "\n"
+
+    grouped = df_final.groupby('album', sort = True)
+
+    sns.barplot(x="song", y="count", hue="album", data=sorted_df)
+    sns.plt.xticks(rotation=90)
+    sns.plt.show()
 
 
 if __name__ == '__main__':
