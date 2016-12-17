@@ -1,8 +1,6 @@
 import sys,os,os.path
 reload(sys)
 sys.setdefaultencoding('utf-8')
-os.environ['HTTP_PROXY']="http://www-proxy.idc.oracle.com:80"
-os.environ['HTTPS_PROXY']="http://www-proxy.idc.oracle.com:80"
 
 from bs4 import BeautifulSoup
 from urllib2 import urlopen
