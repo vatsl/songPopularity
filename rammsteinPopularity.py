@@ -4,6 +4,7 @@ sys.setdefaultencoding('utf-8')
 
 from bs4 import BeautifulSoup
 from urllib2 import urlopen
+import re
 from time import sleep
 import json
 
@@ -56,11 +57,12 @@ def get_language_requests(section_url):
     for link in table_body:
         songname = link.find(class_ = "songName")
         song_name = songname.find("a")
+        song_name = song_name.string
         album = songname.find(class_="langalbum")
         song_title = link.findAll(class_ = "lang")
 
         album_list.append(simplify_album(album))
-        songname_list.append(song_name.string)
+        songname_list.append(re.sub("[\(\[].*?[\)\]]", "", song_name))
         reqcount_list.append(len(song_title))
 
 
@@ -84,8 +86,17 @@ def get_language_requests(section_url):
 
     grouped = df_final.groupby('album', sort = True)
 
-    sns.barplot(x="song", y="count", hue="album", data=sorted_df)
+    sns.set(font_scale=1.0)
+    #s = plt.subplot(1, 1, 1)
+    g = sns.barplot(x="song", y="count", hue="album", data=sorted_df)
+    #s.set_ylim(0,50)
     sns.plt.xticks(rotation=90)
+    sns.plt.tight_layout()
+    sns.plt.xlabel('Song')
+    sns.plt.ylabel('Translation Requests')
+    g.set(ylim=(0, 50))
+    #sns.plt.savefig('output.png')
+
     sns.plt.show()
 
 
